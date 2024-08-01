@@ -1,42 +1,49 @@
 import os
-import sys
 import json
-import struct
-
-from os import path
+import yaml
 
 import numpy as np
 
 from PIL import Image
 
 
-def get_data():
-    img = np.random.randint(0, 50, [100000, 64, 64], dtype=np.uint8)
-    square = np.random.randint(100, 200, [100000, 15, 15], dtype=np.uint8)
+def data_creating():
+    config_file_name = 'params_all.yaml'
+    config_path = os.path.join('config', config_file_name)
+    config = yaml.safe_load(open(config_path))['data_creating']
 
-    coords = np.empty([100000, 2])
+    img_num, img_size, square_size, border_size = config.values()
 
-    data = {}
+    img = np.random.randint(0, 50, [img_num, img_size, img_size], dtype=np.uint8)
+    square = np.random.randint(100, 200, [img_num, square_size, square_size], dtype=np.uint8)
+
+    coords_dict = {}
 
     for i in range(img.shape[0]):
 
-        x = np.random.randint(20, 44)
-        y = np.random.randint(20, 44)
+        half_square_size = square_size // 2
+        axis_coords = np.random.randint(border_size + half_square_size,
+                                        img_size - border_size - half_square_size, 2)
 
-        img[i, (y - 7):(y + 8), (x - 7):(x + 8)] = square[i]
+        axis_0_start_point = axis_coords[0] - half_square_size
+        axis_0_end_point = axis_coords[0] + (square_size - half_square_size)
 
-        coords[i] = [y, x]
+        axis_1_start_point = axis_coords[1] - half_square_size
+        axis_1_end_point = axis_coords[1] + (square_size - half_square_size)
 
-        name_img = f'img_{i}.jpeg'
-        path_img = os.path.join('dataset/', name_img)
+        img[i, axis_0_start_point:axis_0_end_point, axis_1_start_point:axis_1_end_point] = square[i]
+
+        img_name = f'image_{i}.jpeg'
+        img_path = os.path.join('dataset', img_name)
 
         image = Image.fromarray(img[i])
-        image.save(path_img)
+        image.save(img_path)
 
-        data[name_img] = [y, x]
+        coords_dict[img_name] = axis_coords.tolist()
 
-    with open('dataset/coords.json', 'w') as f:
-        json.dump(data, f, indent=2)
+    coords_json_name = 'coords.json'
+    coords_json_path = os.path.join('dataset', coords_json_name)
+    with open(coords_json_path, 'w') as file:
+        json.dump(coords_dict, file, indent=2)
 
-    # os.rmdir('dataset/.ipynb_checkpoints')
     return

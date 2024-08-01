@@ -1,0 +1,5 @@
+data_creating:
+  img_num: 100000
+  img_size: 64
+  square_size: 17
+  border_size: 5
