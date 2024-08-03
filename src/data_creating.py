@@ -7,12 +7,9 @@ import numpy as np
 from PIL import Image
 
 
-def data_creating():
-    config_file_name = 'params_all.yaml'
-    config_path = os.path.join('config', config_file_name)
-    config = yaml.safe_load(open(config_path))['data_creating']
-
-    img_num, img_size, square_size, border_size = config.values()
+def data_creating(config):
+    data_path = config['data_path']
+    img_num, img_size, square_size, border_size = config['data_creating'].values()
 
     img = np.random.randint(0, 50, [img_num, img_size, img_size], dtype=np.uint8)
     square = np.random.randint(100, 200, [img_num, square_size, square_size], dtype=np.uint8)
@@ -34,7 +31,7 @@ def data_creating():
         img[i, axis_0_start_point:axis_0_end_point, axis_1_start_point:axis_1_end_point] = square[i]
 
         img_name = f'image_{i}.jpeg'
-        img_path = os.path.join('dataset', img_name)
+        img_path = os.path.join(data_path, img_name)
 
         image = Image.fromarray(img[i])
         image.save(img_path)
@@ -42,7 +39,7 @@ def data_creating():
         coords_dict[img_name] = axis_coords.tolist()
 
     coords_json_name = 'coords.json'
-    coords_json_path = os.path.join('dataset', coords_json_name)
+    coords_json_path = os.path.join(data_path, coords_json_name)
     with open(coords_json_path, 'w') as file:
         json.dump(coords_dict, file, indent=2)
 

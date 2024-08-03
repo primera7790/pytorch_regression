@@ -1,3 +1,8 @@
+data_path: 'dataset'
+random_split:
+  train: 0.7
+  val: 0.1
+  test: 0.2
 data_creating:
   img_num: 100000
   img_size: 64
