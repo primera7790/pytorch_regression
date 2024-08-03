@@ -25,7 +25,7 @@ class DatasetReg(Dataset):
     def __len__(self):
         return self.length
 
-    def raw_data(self, index):
+    def get_raw_data(self, index):
         file_name = self.names_list[index]
 
         img_path = os.path.join(self.path, file_name)
@@ -36,7 +36,7 @@ class DatasetReg(Dataset):
         return img, coords
 
     def __getitem__(self, index: int):
-        img, coords = self.raw_data(index)
+        img, coords = self.get_raw_data(index)
 
         if self.transform:
             img = self.transform(img)
@@ -44,7 +44,7 @@ class DatasetReg(Dataset):
         return img, coords
 
     def show_image(self, index: int):
-        img, coords = self.raw_data(index)
+        img, coords = self.get_raw_data(index)
 
         plt.scatter(coords[1], coords[0], marker='o', color='red')
         plt.imshow(img, cmap='gray')
