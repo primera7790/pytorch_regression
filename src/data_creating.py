@@ -7,9 +7,7 @@ import numpy as np
 from PIL import Image
 
 
-def data_creating(config):
-    data_path = config['data_path']
-    img_num, img_size, square_size, border_size = config['data_creating'].values()
+def data_creating(data_path, img_num, img_size, square_size, border_size):
 
     img = np.random.randint(0, 50, [img_num, img_size, img_size], dtype=np.uint8)
     square = np.random.randint(100, 200, [img_num, square_size, square_size], dtype=np.uint8)

@@ -1,6 +1,6 @@
 import os
 import json
-
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 
@@ -31,7 +31,7 @@ class DatasetReg(Dataset):
         img_path = os.path.join(self.path, file_name)
         img = Image.open(img_path)
 
-        coords = torch.tensor(self.coords_dict[file_name], dtype=torch.float32)
+        coords = self.coords_dict[file_name]
 
         return img, coords
 
@@ -40,6 +40,7 @@ class DatasetReg(Dataset):
 
         if self.transform:
             img = self.transform(img)
+            coords = torch.tensor(coords, dtype=torch.float32)
 
         return img, coords
 
@@ -49,3 +50,4 @@ class DatasetReg(Dataset):
         plt.scatter(coords[1], coords[0], marker='o', color='red')
         plt.imshow(img, cmap='gray')
         plt.show()
+

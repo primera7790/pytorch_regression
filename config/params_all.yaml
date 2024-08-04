@@ -8,3 +8,11 @@ data_creating:
   img_size: 64
   square_size: 17
   border_size: 5
+model_class:
+  input_size: 4096
+  output_size: 2
+  hidden_size: 128
+  hidden_count: 1
+train:
+  epoch_num: 100
+  learning_rate: 0.0001
