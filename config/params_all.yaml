@@ -1,4 +1,5 @@
 data_path: 'dataset'
+saved_params_path: 'saved_params'
 random_split:
   train: 0.7
   val: 0.1
@@ -14,5 +15,14 @@ model_class:
   hidden_size: 128
   hidden_count: 1
 train:
-  epoch_num: 100
-  learning_rate: 0.0001
+  epoch_num: 60
+  learning_rate: 0.001
+  lr_scheduler:
+    mode: 'min'
+    factor: 0.1
+    patience: 5
+  epochs_on_plateau_allow: 12
+save_load:
+  current_params_file_name: 'current_params_dict.pt'
+  best_params_file_name: 'best_params_dict.pt'
+  threshold: 0.0001
