@@ -1,3 +1,4 @@
+train_or_predict: 'train'
 data_path: 'dataset'
 saved_params_path: 'saved_params'
 random_split:
@@ -23,6 +24,9 @@ train:
     patience: 5
   epochs_on_plateau_allow: 10
 save_load:
+  load_mode:
+    load_to_continue: None
+    load_best: None
   current_params_file_name: 'current_params_dict.pt'
   best_params_file_name: 'best_params_dict.pt'
   threshold: 0.0001

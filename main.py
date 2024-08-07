@@ -1,10 +1,9 @@
-import os
-
 import torch
 import torch.nn as nn
 from torch.utils.data import random_split, DataLoader
 from torchvision.transforms import v2
 
+import os
 import yaml
 import matplotlib.pyplot as plt
 
@@ -52,18 +51,16 @@ def visualisation(train_loss, val_loss, train_acc, val_acc):
     plt.show()
 
 
-def main(load_to_continue=None, load_best=None):
-    config_file_name = 'params_all.yaml'
-    config_path = os.path.join('config', config_file_name)
-    config = yaml.safe_load(open(config_path))
+def train(config, device):
+    load_to_continue = config['save_load']['load_mode']['load_to_continue'] \
+        if config['save_load']['load_mode']['load_to_continue'] != 'None' else None
+    load_best = config['save_load']['load_mode']['load_best'] \
+        if config['save_load']['load_mode']['load_best'] != 'None' else None
 
     if load_to_continue is None and load_best is None:
         train_loader, val_loader, test_loader = preparing_data(config)
     else:
         train_loader, val_loader, test_loader = None, None, None
-
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f'device: {device}')
 
     model = ModelReg(**config['model_class']).to(device)
     # model.test(16, device)
@@ -88,6 +85,11 @@ def main(load_to_continue=None, load_best=None):
         file_to_load_name = config['save_load']['current_params_file_name'] if load_to_continue \
             else config['save_load']['best_params_file_name']
         saved_params_dir_path = config['saved_params_path']
+
+        if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
+            print('No save parameters found.')
+            exit()
+
         param_dicts = torch.load(os.path.join(saved_params_dir_path, file_to_load_name), map_location=device)
 
         train_loader = param_dicts['loaders']['train']
@@ -138,7 +140,8 @@ def main(load_to_continue=None, load_best=None):
 
             true_answers += (torch.round(pred) == targets).all(dim=1).sum().item()
 
-        accuracy_train_current_epoch = true_answers / int(config['data_creating']['img_num'] * config['random_split']['train'])
+        train_set_len = int(config['data_creating']['img_num'] * config['random_split']['train'])
+        accuracy_train_current_epoch = true_answers / train_set_len
 
         train_loss_list.append(mean_train_loss)
         train_accuracy_list.append(accuracy_train_current_epoch)
@@ -161,7 +164,9 @@ def main(load_to_continue=None, load_best=None):
                 true_answers += (torch.round(pred) == targets).all(dim=1).sum().item()
 
             mean_val_loss = sum(loss_per_batch) / len(loss_per_batch)
-            accuracy_val_current_epoch = true_answers / int(config['data_creating']['img_num'] * config['random_split']['val'])
+
+            val_set_len = int(config['data_creating']['img_num'] * config['random_split']['val'])
+            accuracy_val_current_epoch = true_answers / val_set_len
 
             val_loss_list.append(mean_val_loss)
             val_accuracy_list.append(accuracy_val_current_epoch)
@@ -207,7 +212,7 @@ def main(load_to_continue=None, load_best=None):
         threshold = config['save_load']['threshold']
         best_params_file_name = config['save_load']['best_params_file_name']
         if best_loss is None or mean_val_loss < best_loss - best_loss * threshold:
-            print(f'New best loss updated: {best_loss} --> {mean_val_loss}')
+            print(f'Best loss updated: {best_loss} --> {mean_val_loss}')
             best_loss = mean_val_loss
             epochs_without_improve = 0
             torch.save(model_params_dict, os.path.join(params_to_save_path, best_params_file_name))
@@ -227,6 +232,60 @@ def main(load_to_continue=None, load_best=None):
     visualisation(train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list)
 
 
+def predict(config, device):
+    model = ModelReg(**config['model_class']).to(device)
+
+    loss_model = nn.MSELoss()
+
+    file_to_load_name = config['save_load']['best_params_file_name']
+    saved_params_dir_path = config['saved_params_path']
+
+    if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
+        print('No save parameters found.')
+        exit()
+
+    param_dicts = torch.load(os.path.join(saved_params_dir_path, file_to_load_name), map_location=device)
+
+    test_loader = param_dicts['loaders']['test']
+
+    model.load_state_dict(param_dicts['state_dicts']['model'])
+
+    model.eval()
+    with torch.no_grad():
+
+        loss_per_batch = []
+        true_answers = 0
+
+        test_loop = tqdm(test_loader, leave=False)
+        for x, targets in test_loop:
+            input_size = config['model_class']['input_size']
+            x = x.reshape(-1, input_size).to(device)
+            targets = targets.to(device)
+
+            pred = model(x)
+            loss = loss_model(pred, targets)
+
+            loss_per_batch.append(loss.item())
+            true_answers += (torch.round(pred) == targets).all(dim=1).sum().item()
+
+        mean_test_loss = sum(loss_per_batch) / len(loss_per_batch)
+
+        test_set_len = int(config['data_creating']['img_num'] * config['random_split']['test'])
+        accuracy_test_current_epoch = true_answers / test_set_len
+
+    print(f'Loss: {mean_test_loss:.4f} \nAccuracy: {accuracy_test_current_epoch:.4f}')
+
+
 if __name__ == '__main__':
-    main(load_to_continue=None, load_best=None)
+    config_file_name = 'params_all.yaml'
+    config_path = os.path.join('config', config_file_name)
+    config = yaml.safe_load(open(config_path))
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f'device: {device}')
+
+    if config['train_or_predict'] == 'train':
+        train(config, device)
+    elif config['train_or_predict'] == 'predict':
+        predict(config, device)
 
