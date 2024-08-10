@@ -5,3 +5,5 @@ torch==2.3.1
 matplotlib==3.7.5
 torchvision==0.18.1
 tqdm==4.66.5
+fastapi==0.112.0
+uvicorn==0.30.5

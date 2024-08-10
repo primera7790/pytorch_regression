@@ -46,6 +46,7 @@ class DatasetReg(Dataset):
     def show_image(self, index: int):
         img, coords = self.get_raw_data(index)
 
+        plt.title(f'Image {index}')
         plt.scatter(coords[1], coords[0], marker='o', color='red')
         plt.imshow(img, cmap='gray')
         plt.show()

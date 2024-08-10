@@ -87,8 +87,7 @@ def train(config, device):
         saved_params_dir_path = config['saved_params_path']
 
         if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
-            print('No save parameters found.')
-            exit()
+            return 'No save parameters found.'
 
         param_dicts = torch.load(os.path.join(saved_params_dir_path, file_to_load_name), map_location=device)
 
@@ -229,7 +228,14 @@ def train(config, device):
 
         epochs_without_improve += 1
 
-    visualisation(train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list)
+    # visualisation(train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list)
+
+    return f'Epoch [{epoch + 1}/{EPOCHS}], \
+    train_loss={mean_train_loss:.4f}, \
+    train_accuracy={accuracy_train_current_epoch:.4f}, \
+    val_loss={mean_val_loss:.4f}, \
+    val_accuracy={accuracy_val_current_epoch:.4f}, \
+    lr={lr:.8f}'.rstrip('0')
 
 
 def predict(config, device):
@@ -241,8 +247,7 @@ def predict(config, device):
     saved_params_dir_path = config['saved_params_path']
 
     if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
-        print('No save parameters found.')
-        exit()
+        return 'No save parameters found.'
 
     param_dicts = torch.load(os.path.join(saved_params_dir_path, file_to_load_name), map_location=device)
 
@@ -274,6 +279,9 @@ def predict(config, device):
         accuracy_test_current_epoch = true_answers / test_set_len
 
     print(f'Loss: {mean_test_loss:.4f} \nAccuracy: {accuracy_test_current_epoch:.4f}')
+
+    return f'Loss: {mean_test_loss:.4f} \
+    Accuracy: {accuracy_test_current_epoch:.4f}'
 
 
 if __name__ == '__main__':
