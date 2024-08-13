@@ -4,20 +4,20 @@ from torch.utils.data import random_split, DataLoader
 from torchvision.transforms import v2
 
 import os
-import yaml
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 
-from src.data_creating import data_creating
-from src.dataset_reg_class import DatasetReg
-from src.model_class import ModelReg
+from .data_creating import data_creating
+from .dataset_reg_class import DatasetReg
+from .model_class import ModelReg
 
 
 def preparing_data(config):
-    if not os.path.isdir('dataset'):
-        os.mkdir('dataset')
-        data_creating(data_path=config['data_path'], **config['data_creating'])
+    dataset_dir_path = os.path.join('project_pytorch_reg', 'dataset')
+    if not os.path.isdir(dataset_dir_path):
+        os.mkdir(dataset_dir_path)
+        data_creating(data_path=dataset_dir_path, **config['data_creating'])
 
     transform = v2.Compose([
         v2.ToImage(),
@@ -25,8 +25,13 @@ def preparing_data(config):
         v2.Normalize(mean=(0.5,), std=(0.5,))
     ])
 
-    dataset = DatasetReg(config['data_path'], transform=transform)
-    train_set, val_set, test_set = random_split(dataset, config['random_split'].values())
+    dataset = DatasetReg(dataset_dir_path, transform=transform)
+
+    train_split_part = config['random_split']['train']
+    val_split_part = config['random_split']['val']
+    test_split_part = config['random_split']['test']
+
+    train_set, val_set, test_set = random_split(dataset, [train_split_part, val_split_part, test_split_part])
 
     train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=64, shuffle=False)
@@ -84,7 +89,7 @@ def train(config, device):
     if load_to_continue or load_best:
         file_to_load_name = config['save_load']['current_params_file_name'] if load_to_continue \
             else config['save_load']['best_params_file_name']
-        saved_params_dir_path = config['saved_params_path']
+        saved_params_dir_path = os.path.join('project_pytorch_reg', 'saved_params')
 
         if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
             return 'No save parameters found.'
@@ -201,7 +206,7 @@ def train(config, device):
             'best_loss': best_loss
         }
 
-        params_to_save_path = config['saved_params_path']
+        params_to_save_path = os.path.join('project_pytorch_reg', 'saved_params')
         if not os.path.isdir(params_to_save_path):
             os.mkdir(params_to_save_path)
 
@@ -244,7 +249,7 @@ def predict(config, device):
     loss_model = nn.MSELoss()
 
     file_to_load_name = config['save_load']['best_params_file_name']
-    saved_params_dir_path = config['saved_params_path']
+    saved_params_dir_path = os.path.join('project_pytorch_reg', 'saved_params')
 
     if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
         return 'No save parameters found.'
@@ -284,16 +289,16 @@ def predict(config, device):
     Accuracy: {accuracy_test_current_epoch:.4f}'
 
 
-if __name__ == '__main__':
-    config_file_name = 'params_all.yaml'
-    config_path = os.path.join('config', config_file_name)
-    config = yaml.safe_load(open(config_path))
-
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f'device: {device}')
-
-    if config['train_or_predict'] == 'train':
-        train(config, device)
-    elif config['train_or_predict'] == 'predict':
-        predict(config, device)
+# if __name__ == '__main__':
+#     config_file_name = 'params_all.yaml'
+#     config_path = os.path.join('config', config_file_name)
+#     config = yaml.safe_load(open(config_path))
+#
+#     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+#     print(f'device: {device}')
+#
+#     if config['train_or_predict'] == 'train':
+#         train(config, device)
+#     elif config['train_or_predict'] == 'predict':
+#         predict(config, device)
 

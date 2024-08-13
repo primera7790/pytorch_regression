@@ -3,7 +3,6 @@ data_creating:
   img_num: 100000
   img_size: 64
   square_size: 17
-data_path: dataset
 model_class:
   hidden_count: 1
   hidden_size: 128
@@ -20,9 +19,8 @@ save_load:
     load_best: None
     load_to_continue: None
   threshold: 0.0001
-saved_params_path: saved_params
 train:
-  epoch_num: 1
+  epoch_num: 2
   epochs_on_plateau_allow: 10
   learning_rate: 0.001
   lr_scheduler:
