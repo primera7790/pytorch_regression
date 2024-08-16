@@ -289,16 +289,3 @@ def predict(config, device):
     Accuracy: {accuracy_test_current_epoch:.4f}'
 
 
-# if __name__ == '__main__':
-#     config_file_name = 'params_all.yaml'
-#     config_path = os.path.join('config', config_file_name)
-#     config = yaml.safe_load(open(config_path))
-#
-#     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-#     print(f'device: {device}')
-#
-#     if config['train_or_predict'] == 'train':
-#         train(config, device)
-#     elif config['train_or_predict'] == 'predict':
-#         predict(config, device)
-

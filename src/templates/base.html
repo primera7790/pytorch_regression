@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="Regression model"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block head %}{% endblock %}
+    <title>Regression model</title>
+</head>
+<body>
+    <nav class="flex justify-end text-5xl my-3">
+        <ul class="flex gap-5 mr-10">
+            <li><a href="/">Regression model</a></li>
+        </ul>
+    </nav>
+    <hr>
+    <div id="content">
+        <div>
+            <ul class="flex ml-10 gap-14 mr-10 text-2xl">
+                <li><a href="/train">Train</a></li>
+                <li><a href="/operations/predict">Predict</a></li>
+                <li><a href="/operations/data_creating">Create new data</a></li>
+                <li><a href="/parameters/get_params">Get parameters</a></li>
+            </ul>
+        </div>
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>
