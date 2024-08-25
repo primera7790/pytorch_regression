@@ -1,13 +1,14 @@
 import os
+import shutil
 import random
 
 import torch
 import yaml
 from fastapi import APIRouter
 
-from project_pytorch_reg.project_main import train, predict
+from project_pytorch_reg.project_main import train, predict, preparing_data
 from project_pytorch_reg.dataset_reg_class import DatasetReg
-from project_pytorch_reg.data_creating import data_creating
+
 
 router = APIRouter(
     prefix='/operations',
@@ -26,7 +27,10 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 @router.get('/data_creating')
 def creating_data():
-    data_creating(data_path=dataset_dir_path, **config['data_creating'])
+    if os.path.isdir(dataset_dir_path):
+        shutil.rmtree(dataset_dir_path)
+    preparing_data(config)
+
     img_num = config['data_creating']['img_num']
     train_num = int(img_num * config['random_split']['train'])
     val_num = int(img_num * config['random_split']['val'])

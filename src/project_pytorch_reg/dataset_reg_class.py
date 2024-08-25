@@ -50,4 +50,3 @@ class DatasetReg(Dataset):
         plt.scatter(coords[1], coords[0], marker='o', color='red')
         plt.imshow(img, cmap='gray')
         plt.show()
-

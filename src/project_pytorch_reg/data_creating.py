@@ -2,7 +2,9 @@ import os
 import json
 import numpy as np
 
+
 from PIL import Image
+from tqdm import tqdm
 
 
 def data_creating(data_path, img_num, img_size, square_size, border_size):
@@ -11,9 +13,8 @@ def data_creating(data_path, img_num, img_size, square_size, border_size):
     square = np.random.randint(100, 200, [img_num, square_size, square_size], dtype=np.uint8)
 
     coords_dict = {}
-
-    for i in range(img.shape[0]):
-
+    data_creating_loop = tqdm(range(img_num))
+    for i in data_creating_loop:
         half_square_size = square_size // 2
         axis_coords = np.random.randint(border_size + half_square_size,
                                         img_size - border_size - half_square_size, 2)

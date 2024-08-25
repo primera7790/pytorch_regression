@@ -1,5 +1,5 @@
 data_creating:
-  border_size: 6.0
+  border_size: 6
   img_num: 100000
   img_size: 64
   square_size: 17
@@ -17,7 +17,7 @@ save_load:
   current_params_file_name: current_params_dict.pt
   load_mode:
     load_best: None
-    load_to_continue: None
+    load_to_continue: True
   threshold: 0.0001
 train:
   epoch_num: 100
@@ -27,4 +27,3 @@ train:
     factor: 0.1
     mode: min
     patience: 5
-train_or_predict: predict

@@ -13,8 +13,12 @@ from .dataset_reg_class import DatasetReg
 from .model_class import ModelReg
 
 
+dataset_dir_path = os.path.join('project_pytorch_reg', 'dataset')
+params_dir_path = os.path.join('project_pytorch_reg', 'saved_params')
+
+
 def preparing_data(config):
-    dataset_dir_path = os.path.join('project_pytorch_reg', 'dataset')
+
     if not os.path.isdir(dataset_dir_path):
         os.mkdir(dataset_dir_path)
         data_creating(data_path=dataset_dir_path, **config['data_creating'])
@@ -37,7 +41,18 @@ def preparing_data(config):
     val_loader = DataLoader(val_set, batch_size=64, shuffle=False)
     test_loader = DataLoader(test_set, batch_size=64, shuffle=False)
 
-    return train_loader, val_loader, test_loader
+    loaders_dict = {
+        'train_loader': train_loader,
+        'val_loader': val_loader,
+        'test_loader': test_loader
+    }
+
+    if not os.path.isdir(params_dir_path):
+        os.mkdir(params_dir_path)
+
+    torch.save(loaders_dict, os.path.join(params_dir_path, 'loaders_dict.pt'))
+
+    return
 
 
 def visualisation(train_loss, val_loss, train_acc, val_acc):
@@ -62,10 +77,15 @@ def train(config, device):
     load_best = config['save_load']['load_mode']['load_best'] \
         if config['save_load']['load_mode']['load_best'] != 'None' else None
 
-    if load_to_continue is None and load_best is None:
-        train_loader, val_loader, test_loader = preparing_data(config)
-    else:
-        train_loader, val_loader, test_loader = None, None, None
+    loaders_dict_path = os.path.join(params_dir_path, 'loaders_dict.pt')
+
+    if not os.path.isdir(dataset_dir_path) or not os.path.exists(loaders_dict_path):
+        preparing_data(config)
+
+    loaders_dict = torch.load(loaders_dict_path, map_location=device)
+
+    train_loader = loaders_dict['train_loader']
+    val_loader = loaders_dict['val_loader']
 
     model = ModelReg(**config['model_class']).to(device)
     # model.test(16, device)
@@ -92,13 +112,9 @@ def train(config, device):
         saved_params_dir_path = os.path.join('project_pytorch_reg', 'saved_params')
 
         if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
-            return 'No save parameters found.'
+            return 'No saved parameters found.'
 
         param_dicts = torch.load(os.path.join(saved_params_dir_path, file_to_load_name), map_location=device)
-
-        train_loader = param_dicts['loaders']['train']
-        val_loader = param_dicts['loaders']['val']
-        test_loader = param_dicts['loaders']['test']
 
         model.load_state_dict(param_dicts['state_dicts']['model'])
         opt.load_state_dict(param_dicts['state_dicts']['opt'])
@@ -109,13 +125,13 @@ def train(config, device):
             else config['train']['epoch_num']
 
         train_loss_list = param_dicts['loss_lists']['train']
-        train_accuracy_list = param_dicts['loss_lists']['val']
-        val_loss_list = param_dicts['accuracy_lists']['train']
+        train_accuracy_list = param_dicts['accuracy_lists']['train']
+        val_loss_list = param_dicts['loss_lists']['val']
         val_accuracy_list = param_dicts['accuracy_lists']['val']
         lr_list = param_dicts['lr_list']
         best_loss = param_dicts['best_loss']
 
-    for epoch in range(first_epoch, EPOCHS):
+    for epoch in range(EPOCHS):
         model.train()
 
         loss_per_batch = []
@@ -140,7 +156,7 @@ def train(config, device):
             loss_per_batch.append(loss.item())
             mean_train_loss = sum(loss_per_batch) / len(loss_per_batch)
 
-            train_loop.set_description(f'Epoch [{epoch + 1}/{EPOCHS}], train_loss={mean_train_loss:.4f}')
+            train_loop.set_description(f'Status: {epoch + 1}/{EPOCHS}, train_loss={mean_train_loss:.4f}')
 
             true_answers += (torch.round(pred) == targets).all(dim=1).sum().item()
 
@@ -180,11 +196,6 @@ def train(config, device):
         lr_list.append(lr)
 
         model_params_dict = {
-            'loaders': {
-                'train': train_loader,
-                'val': val_loader,
-                'test': test_loader
-            },
             'state_dicts': {
                 'model': model.state_dict(),
                 'opt': opt.state_dict(),
@@ -202,16 +213,12 @@ def train(config, device):
                 'train': train_accuracy_list,
                 'val': val_accuracy_list
             },
-            'lr_list' : lr_list,
+            'lr_list': lr_list,
             'best_loss': best_loss
         }
 
-        params_to_save_path = os.path.join('project_pytorch_reg', 'saved_params')
-        if not os.path.isdir(params_to_save_path):
-            os.mkdir(params_to_save_path)
-
         current_params_file_name = config['save_load']['current_params_file_name']
-        torch.save(model_params_dict, os.path.join(params_to_save_path, current_params_file_name))
+        torch.save(model_params_dict, os.path.join(params_dir_path, current_params_file_name))
 
         threshold = config['save_load']['threshold']
         best_params_file_name = config['save_load']['best_params_file_name']
@@ -219,9 +226,9 @@ def train(config, device):
             print(f'Best loss updated: {best_loss} --> {mean_val_loss}')
             best_loss = mean_val_loss
             epochs_without_improve = 0
-            torch.save(model_params_dict, os.path.join(params_to_save_path, best_params_file_name))
+            torch.save(model_params_dict, os.path.join(params_dir_path, best_params_file_name))
 
-        print(f'Epoch [{epoch + 1}/{EPOCHS}], \
+        print(f'Epoch [{epoch + first_epoch + 1}/{EPOCHS + first_epoch}], \
         train_loss={mean_train_loss:.4f}, \
         train_accuracy={accuracy_train_current_epoch:.4f}, \
         val_loss={mean_val_loss:.4f}, \
@@ -235,7 +242,7 @@ def train(config, device):
 
     # visualisation(train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list)
 
-    return f'Epoch [{epoch + 1}/{EPOCHS}], \
+    return f'Epoch [{epoch + first_epoch + 1}/{EPOCHS + first_epoch}], \
     train_loss={mean_train_loss:.4f}, \
     train_accuracy={accuracy_train_current_epoch:.4f}, \
     val_loss={mean_val_loss:.4f}, \
@@ -249,14 +256,16 @@ def predict(config, device):
     loss_model = nn.MSELoss()
 
     file_to_load_name = config['save_load']['best_params_file_name']
-    saved_params_dir_path = os.path.join('project_pytorch_reg', 'saved_params')
+    file_to_load_path = os.path.join(params_dir_path, file_to_load_name)
+    loaders_dict_path = os.path.join(params_dir_path, 'loaders_dict.pt')
 
-    if not os.path.exists(os.path.join(saved_params_dir_path, file_to_load_name)):
-        return 'No save parameters found.'
+    if not os.path.exists(file_to_load_path) or not os.path.exists(loaders_dict_path):
+        return 'No saved parameters found.'
 
-    param_dicts = torch.load(os.path.join(saved_params_dir_path, file_to_load_name), map_location=device)
+    param_dicts = torch.load(os.path.join(params_dir_path, file_to_load_name), map_location=device)
+    loaders_dict = torch.load(loaders_dict_path, map_location=device)
 
-    test_loader = param_dicts['loaders']['test']
+    test_loader = loaders_dict['test_loader']
 
     model.load_state_dict(param_dicts['state_dicts']['model'])
 
@@ -287,5 +296,3 @@ def predict(config, device):
 
     return f'Loss: {mean_test_loss:.4f} \
     Accuracy: {accuracy_test_current_epoch:.4f}'
-
-
