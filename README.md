@@ -33,9 +33,9 @@
 
 ### Взаимодействие:
 
-Ознакомление с текущими параметрами: &nbsp; кнопка `Get parameters`, либо `http://localhost:1234/parameters/get_params` ;
-Изменение параметров: &nbsp; `http://localhost:1234/docs#/Parameters/set_params_parameters_set_params__parameter_name__post` , в поле `parameter_name` указываем расположение и имя параметра, отделяя уровни вложенности через `__`, в поле `new_value` указываем новое значение;
-Запуск обучения модели: &nbsp; кнопка `Train`, либо `http://localhost:1234/operations/train` ;
-Предсказание модели на тестовых данных: &nbsp; кнопка `Predict`, либо `http://localhost:1234/operations/predict` ;
-Сгенерировать новые данные: &nbsp; кнопка `Create new data`, либо `http://localhost:1234/operations/data_creating` .
+- Ознакомление с текущими параметрами: &nbsp; кнопка `Get parameters`, либо `http://localhost:1234/parameters/get_params` ; <br>
+- Изменение параметров: &nbsp; `http://localhost:1234/docs#/Parameters/set_params_parameters_set_params__parameter_name__post` . <br> В поле `parameter_name` указываем расположение и имя параметра, отделяя уровни вложенности через `__`. <br> В поле `new_value` указываем новое значение; <br>
+- Запуск обучения модели: &nbsp; кнопка `Train`, либо `http://localhost:1234/operations/train` ; <br>
+- Предсказание модели на тестовых данных: &nbsp; кнопка `Predict`, либо `http://localhost:1234/operations/predict` ; <br>
+- Сгенерировать новые данные: &nbsp; кнопка `Create new data`, либо `http://localhost:1234/operations/data_creating` .
 
